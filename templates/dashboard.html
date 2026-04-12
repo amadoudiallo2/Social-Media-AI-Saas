@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Welcome, {{ user.full_name }}</h2>
+
+<section class="card">
+  <h3>Subscription</h3>
+  {% if package %}
+    <p>Current plan: <strong>{{ package.name }}</strong></p>
+    <p>Usage: {{ usage_count }} {% if package.limit != -1 %}/ {{ package.limit }}{% else %}(unlimited){% endif %}</p>
+  {% else %}
+    <p>No active plan selected yet.</p>
+  {% endif %}
+  <div class="plan-grid">
+    {% for slug, pkg in packages.items() %}
+    <form method="post" action="{{ url_for('subscribe', package_id=slug) }}">
+      <h4>{{ pkg.name }} - ${{ pkg.price }}/mo</h4>
+      <p>{{ pkg.description }}</p>
+      <button type="submit">Choose {{ pkg.name }}</button>
+    </form>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="card">
+  <h3>Generate Content</h3>
+  <form method="post" class="form-grid">
+    <label>Content type
+      <select name="content_type">
+        <option value="post">Social post</option>
+        <option value="video">Promotional video concept</option>
+      </select>
+    </label>
+    <label>Business name <input name="business_name" required /></label>
+    <label>Audience <input name="audience" required /></label>
+    <label>Objective <input name="objective" required /></label>
+    <label>Tone <input name="tone" value="confident" required /></label>
+    <button type="submit">Generate</button>
+  </form>
+</section>
+
+<section class="card">
+  <h3>Recent Outputs</h3>
+  {% if generated %}
+    {% for item in generated %}
+    <article class="output">
+      <p><strong>{{ item.content_type|capitalize }}</strong> for {{ item.business_name }} <small>{{ item.created_at }}</small></p>
+      <pre>{{ item.output }}</pre>
+    </article>
+    {% endfor %}
+  {% else %}
+    <p>No content generated yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

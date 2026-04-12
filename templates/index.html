@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero">
+  <h2>Generate social media content at scale</h2>
+  <p>Create an account, choose a paid plan, and generate promotional posts or video concepts for your business in minutes.</p>
+  <a class="btn" href="{{ url_for('signup') }}">Start Now</a>
+</section>
+
+<section class="plans">
+  {% for slug, package in packages.items() %}
+    <article>
+      <h3>{{ package.name }}</h3>
+      <p class="price">${{ package.price }}/month</p>
+      <p>{{ package.description }}</p>
+      <p>
+        {% if package.limit == -1 %}
+          Unlimited generations
+        {% else %}
+          {{ package.limit }} generations / month
+        {% endif %}
+      </p>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}
