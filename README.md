@@ -1,13 +1,41 @@
-# GUINEE
-This is the project main goal is to computerize the different departments of Guinea’s Government to reduce the corruption, reduce the waste of wood, secure the data and get a very near approximate information about every Guinean citizen regardless of his geographic location. This will have a great impact on the country’s economy in the below cited department and a lot of other subdomains. To do so, every country needs a database system and a strong networking and various equipment. The challenge here is to think very critically how to solve that problem and then proceed with the most efficient and less time-consuming technology to apply the algorithm to. An emphasis should be put on the security aspect of these platform because it is a liability issue. That is why collaboration is encouraged. 
-These are the main departments that we’re serving for this very beginning of our journey: 
-Birth certificates;
-The department of passports;
-the department of health;
-the department of education;
-the department of motor vehicles;
-The department of defense;
-The police; 
-etc.
-Remember this saying form Nelson Mandela: << It always seems impossible until it’s done >>, it’s always been easier to work as a team. 
+# SocialBoost AI SaaS (MVP)
 
+A lightweight SaaS platform that lets clients:
+
+1. Create an account.
+2. Choose a paid package.
+3. Generate social-media marketing content on demand (posts or promo video concepts).
+
+## Features
+
+- User sign-up and login.
+- Paid package selection (Starter, Pro, Agency).
+- Plan-aware generation limits:
+  - Starter: 25 generations/month.
+  - Pro / Agency: unlimited generations.
+- Content generator form that accepts:
+  - business name
+  - target audience
+  - campaign objective
+  - tone
+  - output type (post/video)
+- Persistent history of recent generated outputs per user.
+
+## Tech
+
+- Python + Flask
+- SQLite
+- Jinja templates + simple CSS
+
+## Run locally
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python app.py
+```
+
+Then open: `http://127.0.0.1:5000`
+
+> Note: This MVP uses plain password storage and simulated package payment logic. In production, add secure password hashing, a payment processor (e.g., Stripe), role-based access, rate limiting, and a real content/video generation backend.
