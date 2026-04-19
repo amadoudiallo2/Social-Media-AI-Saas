@@ -16,6 +16,11 @@ DB_PATH = BASE_DIR / "saas.db"
 UPLOAD_DIR = BASE_DIR / "uploads"
 ALLOWED_UPLOAD_EXTENSIONS = {"mp4", "mov", "m4v", "mp3", "wav", "m4a", "png", "jpg", "jpeg", "webp"}
 
+from flask import Flask, flash, g, redirect, render_template, request, session, url_for
+
+BASE_DIR = Path(__file__).parent
+DB_PATH = BASE_DIR / "saas.db"
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-secret")
 
@@ -24,18 +29,21 @@ PACKAGES = {
         "name": "Starter",
         "price": 29,
         "description": "Best for solo creators validating short-form ideas.",
+        "description": "Good for solopreneurs creating posts and captions.",
         "limit": 25,
     },
     "pro": {
         "name": "Pro",
         "price": 99,
         "description": "Unlimited short-form curation for creators and marketers.",
+        "description": "Unlimited text + image ideas and short-form video concepts.",
         "limit": -1,
     },
     "agency": {
         "name": "Agency",
         "price": 249,
         "description": "Unlimited analyses for teams repurposing at scale.",
+        "description": "Unlimited generations + team support and priority queue.",
         "limit": -1,
     },
 }
@@ -66,6 +74,8 @@ def init_db() -> None:
 
     db = sqlite3.connect(DB_PATH)
     db.row_factory = sqlite3.Row
+def init_db() -> None:
+    db = sqlite3.connect(DB_PATH)
     db.executescript(
         """
         CREATE TABLE IF NOT EXISTS users (
@@ -186,6 +196,7 @@ def ingest_source_from_request() -> dict[str, str]:
 
 def analyze_source_for_shorts(payload: dict[str, Any]) -> dict[str, Any]:
     """MVP placeholder analysis layer; swap with real media/LLM analysis service later."""
+def generate_marketing_content(payload: dict[str, Any]) -> str:
     business = payload["business_name"]
     audience = payload["audience"]
     objective = payload["objective"]
@@ -272,6 +283,27 @@ def analyze_source_for_shorts(payload: dict[str, Any]) -> dict[str, Any]:
         ),
         "mock_note": "MVP placeholder analysis: replace with real transcript/media intelligence service later.",
     }
+    content_type = payload["content_type"]
+
+    if content_type == "video":
+        return (
+            f"30-second promo video plan for {business}:\\n"
+            f"1) Hook (0-5s): A bold statement for {audience} in a {tone} tone.\\n"
+            f"2) Problem (5-10s): Show the main pain point related to {objective}.\\n"
+            f"3) Solution (10-20s): Demonstrate how {business} solves it with clear visuals.\\n"
+            f"4) Social Proof (20-26s): Add one customer quote and before/after insight.\\n"
+            f"5) CTA (26-30s): 'Message us today to get started.'\\n"
+            "Visual style: Fast cuts, subtitles, brand colors, and upbeat background audio."
+        )
+
+    return (
+        f"Campaign post for {business}:\\n"
+        f"Audience: {audience}\\n"
+        f"Objective: {objective}\\n"
+        f"Tone: {tone}\\n"
+        "Caption: Ready to transform your results? Let's make your next win simple, measurable, and repeatable.\\n"
+        "CTA: Click the link in bio or send us a DM to get a personalized offer today."
+    )
 
 
 @app.route("/")
@@ -387,6 +419,28 @@ def dashboard() -> str:
             INSERT INTO generations
             (user_id, content_type, business_name, audience, objective, tone, output, created_at, source_type, source_reference, uploaded_file)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    generated = db.execute(
+        "SELECT * FROM generations WHERE user_id = ? ORDER BY id DESC LIMIT 10", (user["id"],)
+    ).fetchall()
+
+    if request.method == "POST":
+        if not can_generate(user):
+            flash("Generation limit reached or no plan selected.")
+            return redirect(url_for("dashboard"))
+
+        payload = {
+            "content_type": request.form["content_type"],
+            "business_name": request.form["business_name"],
+            "audience": request.form["audience"],
+            "objective": request.form["objective"],
+            "tone": request.form["tone"],
+        }
+        output = generate_marketing_content(payload)
+        db.execute(
+            """
+            INSERT INTO generations
+            (user_id, content_type, business_name, audience, objective, tone, output, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 user["id"],
@@ -418,6 +472,14 @@ def dashboard() -> str:
         except json.JSONDecodeError:
             item["report"] = {"source_content_summary": item["output"], "short_form_options": []}
         generated.append(item)
+
+                output,
+                datetime.utcnow().isoformat(),
+            ),
+        )
+        db.commit()
+        flash("Content generated successfully.")
+        return redirect(url_for("dashboard"))
 
     package = PACKAGES.get(user["package_id"]) if user["package_id"] else None
     usage_count = db.execute(
