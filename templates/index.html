@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero">
+  <h2>Turn raw content into monetizable short-form ideas</h2>
+  <p>Upload a YouTube link, video/audio file, or screenshot. SocialBoost AI analyzes your source and returns TikTok + YouTube Shorts opportunities with hooks, captions, and CTA-ready concepts.</p>
+  <a class="btn" href="{{ url_for('signup') }}">Create account & analyze content</a>
+</section>
+
+<section class="plans">
+  {% for slug, package in packages.items() %}
+    <article>
+      <h3>{{ package.name }}</h3>
+      <p class="price">${{ package.price }}/month</p>
+      <p>{{ package.description }}</p>
+      <p>
+        {% if package.limit == -1 %}
+          Unlimited analyses
+        {% else %}
+          {{ package.limit }} analyses / month
+        {% endif %}
+      </p>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}
