@@ -1,5 +1,12 @@
 {% extends 'base.html' %}
 {% block content %}
+<h2>Creator Repurposing Workspace</h2>
+
+<section class="card">
+  <h3>Plan & usage</h3>
+  {% if package %}
+    <p>Current plan: <strong>{{ package.name }}</strong></p>
+    <p>Analyses used: {{ usage_count }} {% if package.limit != -1 %}/ {{ package.limit }}{% else %}(unlimited){% endif %}</p>
 <h2>Welcome, {{ user.full_name }}</h2>
 
 <section class="card">
@@ -22,6 +29,21 @@
 </section>
 
 <section class="card">
+  <h3>1) Add source content</h3>
+  <p>Provide one source input: YouTube URL, upload, or raw transcript/notes.</p>
+  <form method="post" class="form-grid" enctype="multipart/form-data">
+    <label>Brand or creator name <input name="business_name" required /></label>
+    <label>Target audience <input name="audience" required placeholder="e.g., real estate agents" /></label>
+    <label>Primary objective <input name="objective" required placeholder="e.g., generate qualified inbound leads" /></label>
+    <label>Voice / style <input name="tone" value="confident and concise" required /></label>
+
+    <label>YouTube URL <input name="youtube_url" type="url" placeholder="https://www.youtube.com/watch?v=..." /></label>
+    <label>Upload video, audio, or screenshot <input name="source_file" type="file" accept="video/*,audio/*,image/*" /></label>
+    <label>Raw notes / transcript
+      <textarea name="source_notes" rows="4" placeholder="Paste transcript, thread, talking points, or screenshot context..."></textarea>
+    </label>
+
+    <button type="submit">2) Analyze and generate short-form opportunities</button>
   <h3>Generate Content</h3>
   <form method="post" class="form-grid">
     <label>Content type
@@ -39,6 +61,68 @@
 </section>
 
 <section class="card">
+  <h3>Results: TikTok + YouTube Shorts opportunities</h3>
+  {% if generated %}
+    {% for item in generated %}
+    <article class="output">
+      <p>
+        <strong>Analysis #{{ item.id }}</strong>
+        <small>{{ item.created_at }}</small><br/>
+        Source: {{ item.source_type or 'unknown' }}
+        {% if item.source_reference %} | {{ item.source_reference }}{% endif %}
+        {% if item.uploaded_file %} | {{ item.uploaded_file }}{% endif %}
+      </p>
+
+      <h4>Source summary</h4>
+      <p>{{ item.report.source_content_summary }}</p>
+
+      <h4>Main topic</h4>
+      <p>{{ item.report.main_topic }}</p>
+
+      <h4>Strong hooks</h4>
+      <ul>
+      {% for hook in item.report.strongest_hooks %}
+        <li>{{ hook }}</li>
+      {% endfor %}
+      </ul>
+
+      <h4>Short-form options</h4>
+      {% for option in item.report.short_form_options %}
+      <div class="option-card">
+        <p><strong>{{ option.title_hook }}</strong> <span class="pill">{{ option.platform }}</span></p>
+        <ul>
+          <li><strong>Angle:</strong> {{ option.angle_summary }}</li>
+          <li><strong>Why it may perform:</strong> {{ option.why_it_may_perform }}</li>
+          <li><strong>Caption:</strong> {{ option.caption }}</li>
+          <li><strong>CTA:</strong> {{ option.cta }}</li>
+          <li><strong>Clip framing:</strong> {{ option.clip_framing }}</li>
+          <li><strong>Confidence:</strong> {{ option.confidence }} — {{ option.virality_rationale }}</li>
+        </ul>
+      </div>
+      {% endfor %}
+
+      <h4>Best recommended option</h4>
+      <p><strong>{{ item.report.best_recommended_option.title_hook }}</strong> ({{ item.report.best_recommended_option.platform }})</p>
+      <p>{{ item.report.strategy_rationale }}</p>
+
+      <details>
+        <summary>View additional analysis signals</summary>
+        <ul>
+          {% for row in item.report.key_moments %}<li>{{ row }}</li>{% endfor %}
+        </ul>
+        <ul>
+          {% for row in item.report.emotional_or_retention_segments %}<li>{{ row }}</li>{% endfor %}
+        </ul>
+        <ul>
+          {% for row in item.report.monetizable_angles %}<li>{{ row }}</li>{% endfor %}
+        </ul>
+        <p><strong>Platform fit:</strong> {{ item.report.platform_fit }}</p>
+        <p><strong>Note:</strong> {{ item.report.mock_note }}</p>
+      </details>
+    </article>
+    {% endfor %}
+  {% else %}
+    <p>No analyses yet. Start by adding source content above.</p>
   <h3>Recent Outputs</h3>
   {% if generated %}
     {% for item in generated %}
